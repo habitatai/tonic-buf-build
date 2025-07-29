@@ -13,12 +13,12 @@ pub(crate) struct BufYaml {
 impl BufYaml {
     pub(crate) fn load(file: &Path) -> Result<BufYaml, TonicBufBuildError> {
         let f = std::fs::File::open(file).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
+            TonicBufBuildError::new(&format!("failed to read {}", file.as_os_str().display()), e.into())
         })?;
 
         let buf: BufYaml = serde_yaml_ng::from_reader(&f).map_err(|e| {
             TonicBufBuildError::new(
-                &format!("failed to deserialize {:?}", file.as_os_str()),
+                &format!("failed to deserialize {}", file.as_os_str().display()),
                 e.into(),
             )
         })?;
@@ -34,12 +34,12 @@ pub(crate) struct BufWorkYaml {
 impl BufWorkYaml {
     pub(crate) fn load(file: &Path) -> Result<Self, TonicBufBuildError> {
         let buf_work_file = std::fs::File::open(file).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
+            TonicBufBuildError::new(&format!("failed to read {}", file.as_os_str().display()), e.into())
         })?;
 
         let buf_work: BufWorkYaml = serde_yaml_ng::from_reader(&buf_work_file).map_err(|e| {
             TonicBufBuildError::new(
-                &format!("failed to deserialize {:?}", file.as_os_str()),
+                &format!("failed to deserialize {}", file.as_os_str().display()),
                 e.into(),
             )
         })?;
@@ -65,7 +65,7 @@ pub(crate) fn ls_files(proto_path: &Path) -> Result<Vec<String>, TonicBufBuildEr
         .map_err(|e| TonicBufBuildError::new("failed to decode `buf ls-files' output", e.into()))?
         .trim_end()
         .split('\n')
-        .map(|s| s.to_string())
+        .map(std::string::ToString::to_string)
         .collect::<Vec<String>>();
 
     Ok(protos)
