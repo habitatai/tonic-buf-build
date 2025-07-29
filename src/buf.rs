@@ -16,7 +16,7 @@ impl BufYaml {
             TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
         })?;
 
-        let buf: BufYaml = serde_yaml::from_reader(&f).map_err(|e| {
+        let buf: BufYaml = serde_yaml_ng::from_reader(&f).map_err(|e| {
             TonicBufBuildError::new(
                 &format!("failed to deserialize {:?}", file.as_os_str()),
                 e.into(),
@@ -37,7 +37,7 @@ impl BufWorkYaml {
             TonicBufBuildError::new(&format!("failed to read {:?}", file.as_os_str()), e.into())
         })?;
 
-        let buf_work: BufWorkYaml = serde_yaml::from_reader(&buf_work_file).map_err(|e| {
+        let buf_work: BufWorkYaml = serde_yaml_ng::from_reader(&buf_work_file).map_err(|e| {
             TonicBufBuildError::new(
                 &format!("failed to deserialize {:?}", file.as_os_str()),
                 e.into(),
