@@ -2,14 +2,6 @@
 
 This guide helps you migrate from tonic-buf-build 0.13 to 0.14, which introduces significant API simplifications and updates to use `tonic-prost-build` instead of `tonic-build`.
 
-## Summary of Changes
-
-- **Simplified API**: Reduced from 6 to 3 public functions
-- **Updated dependency**: Now uses `tonic-prost-build` instead of `tonic-build`
-- **Removed complex parameters**: No more `tonic_builder` and `config` parameters for basic usage
-- **Removed `TonicBufConfig`**: For basic cases, configuration is no longer needed
-- **Added builder configuration**: New `compile_from_buf_with_builder_config` for advanced scenarios
-
 ## API Changes
 
 ### Basic Usage Migration
