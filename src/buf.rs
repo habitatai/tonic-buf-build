@@ -92,7 +92,7 @@ pub(crate) fn export_all(
         .map_err(|e| {
             TonicBufBuildError::new(
                 &format!(
-                    "failed to execute `buf export . -o {export_dir_str}` from {buf_dir:?}"
+                    "failed to execute `buf export . -o {export_dir_str}` from {}", buf_dir.display()
                 ),
                 e.into(),
             )
@@ -101,7 +101,7 @@ pub(crate) fn export_all(
         .map_err(|e| {
             TonicBufBuildError::new(
                 &format!(
-                    "failed to execute `buf export . -o {export_dir_str}` from {buf_dir:?}"
+                    "failed to execute `buf export . -o {export_dir_str}` from {}", buf_dir.display()
                 ),
                 e.into(),
             )
@@ -117,8 +117,8 @@ pub(crate) fn export_all(
                 .map_err(|e| {
                     TonicBufBuildError::new(
                         &format!(
-                            "failed to execute `buf export {} -o {}` from {:?}",
-                            &dep, export_dir_str, buf_dir
+                            "failed to execute `buf export {} -o {}` from {}",
+                            &dep, export_dir_str, buf_dir.display()
                         ),
                         e.into(),
                     )
@@ -127,8 +127,8 @@ pub(crate) fn export_all(
                 .map_err(|e| {
                     TonicBufBuildError::new(
                         &format!(
-                            "failed to execute `buf export {} -o {}` from {:?}",
-                            &dep, export_dir_str, buf_dir
+                            "failed to execute `buf export {} -o {}` from {}",
+                            &dep, export_dir_str, buf_dir.display()
                         ),
                         e.into(),
                     )

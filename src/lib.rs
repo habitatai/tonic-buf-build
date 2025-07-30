@@ -151,7 +151,7 @@ pub fn compile_from_buf_with_config<P: AsRef<Path>>(
         .map_err(|e| TonicBufBuildError::new("error running tonic build", e.into()))
 }
 
-/// Compiles protobuf files using buf configuration with advanced tonic_prost_build configuration.
+/// Compiles protobuf files using buf configuration with advanced `tonic_prost_build` configuration.
 ///
 /// This function allows you to provide a closure that configures the `tonic_prost_build::Builder`.
 /// This is useful for advanced options like `file_descriptor_set_path`, `build_server`, etc.
@@ -195,7 +195,7 @@ where
 
 /// Compiles protobuf files using buf configuration with advanced builder and buf configuration.
 ///
-/// This function combines both buf directory configuration and tonic_prost_build configuration.
+/// This function combines both buf directory configuration and `tonic_prost_build` configuration.
 ///
 /// # Errors
 ///
@@ -228,9 +228,9 @@ where
     let includes = vec![export_dir.to_string_lossy().to_string()];
 
     let builder = tonic_prost_build::configure();
-    let configured_builder = configure_builder(builder);
+    let final_builder = configure_builder(builder);
 
-    configured_builder
+    final_builder
         .compile_protos(&protos, &includes)
         .map_err(|e| TonicBufBuildError::new("error running tonic build", e.into()))
 }
