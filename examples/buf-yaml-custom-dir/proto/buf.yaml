@@ -1,0 +1,8 @@
+version: v1
+name: buf.build/tonic-buf-build/custom-dir
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT

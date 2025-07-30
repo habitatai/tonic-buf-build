@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package tonic_buf_build_custom_dir;
+
+// Sample service demonstrating custom directory configuration
+service CustomDirService {
+  // Send a greeting from custom directory
+  rpc SayHelloFromCustomDir(HelloRequest) returns (HelloResponse);
+  // Get current configuration info
+  rpc GetConfig(ConfigRequest) returns (ConfigResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+  string location = 2;
+}
+
+message HelloResponse {
+  string message = 1;
+  string timestamp = 2;
+}
+
+message ConfigRequest {}
+
+message ConfigResponse {
+  string buf_directory = 1;
+  string proto_files_count = 2;
+  repeated string available_services = 3;
+}

@@ -1,0 +1,18 @@
+[package]
+name = "buf-yaml-custom-dir"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "buf-yaml-custom-dir"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+tonic = "0.14"
+prost = "0.14"
+tonic-prost = "0.14"
+chrono = { version = "0.4", features = ["serde"] }
+
+[build-dependencies]
+tonic-buf-build = { path = "../../" }
