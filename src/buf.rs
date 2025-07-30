@@ -71,24 +71,45 @@ pub(crate) fn ls_files(proto_path: &Path) -> Result<Vec<String>, TonicBufBuildEr
     Ok(protos)
 }
 
-pub(crate) fn export_all(buf: &BufYaml, export_dir: &Path) -> Result<(), TonicBufBuildError> {
-    let export_dir = export_dir.to_str().unwrap();
+pub(crate) fn export_all(buf: &BufYaml, buf_dir: &Path, export_dir: &Path) -> Result<(), TonicBufBuildError> {
+    let export_dir_str = export_dir.to_str().unwrap();
 
+    // Export local proto files (current directory)
+    std::process::Command::new("buf")
+        .args(["export", ".", "-o", export_dir_str])
+        .current_dir(buf_dir)
+        .spawn()
+        .map_err(|e| {
+            TonicBufBuildError::new(
+                &format!("failed to execute `buf export . -o {}` from {:?}", export_dir_str, buf_dir),
+                e.into(),
+            )
+        })?
+        .wait()
+        .map_err(|e| {
+            TonicBufBuildError::new(
+                &format!("failed to execute `buf export . -o {}` from {:?}", export_dir_str, buf_dir),
+                e.into(),
+            )
+        })?;
+
+    // Export dependencies from buf.deps
     if let Some(deps) = &buf.deps {
         for dep in deps {
             std::process::Command::new("buf")
-                .args(["export", dep, "-o", export_dir])
+                .args(["export", dep, "-o", export_dir_str])
+                .current_dir(buf_dir)
                 .spawn()
                 .map_err(|e| {
                     TonicBufBuildError::new(
-                        &format!("failed to execute `buf export {} -o {}'", &dep, &export_dir),
+                        &format!("failed to execute `buf export {} -o {}` from {:?}", &dep, export_dir_str, buf_dir),
                         e.into(),
                     )
                 })?
                 .wait()
                 .map_err(|e| {
                     TonicBufBuildError::new(
-                        &format!("failed to execute `buf export {} -o {}'", &dep, &export_dir),
+                        &format!("failed to execute `buf export {} -o {}` from {:?}", &dep, export_dir_str, buf_dir),
                         e.into(),
                     )
                 })?;
@@ -109,11 +130,13 @@ pub(crate) fn export_all_from_workspace(
             let mut buf_dir = PathBuf::from(workspace_dir);
             buf_dir.push(dir);
             buf_dirs.push(buf_dir.clone());
-            buf_dir.push("buf.yaml");
+            
+            let mut buf_yaml_path = buf_dir.clone();
+            buf_yaml_path.push("buf.yaml");
 
-            let buf = BufYaml::load(buf_dir.as_path())?;
+            let buf = BufYaml::load(buf_yaml_path.as_path())?;
 
-            export_all(&buf, export_dir)?;
+            export_all(&buf, &buf_dir, export_dir)?;
         }
     }
     Ok(buf_dirs)

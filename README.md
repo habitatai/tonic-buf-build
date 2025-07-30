@@ -17,31 +17,29 @@ Then, in your build.rs:
 
 ```rust
 fn main() -> Result<(), tonic_buf_build::error::TonicBufBuildError> {
-   tonic_buf_build::compile_from_buf(tonic_build::configure(), None)?;
+   tonic_buf_build::compile_from_buf()?;
    Ok(())
 }
 ```
 
 To use buf workspaces, simply call `tonic_buf_build::compile_from_buf_workspace` instead.
 
-For complete and working examples, take a look at the examples folder.
-
-When the buf files are not located in the current directory, you can configure the *absolute* path to the directory, containing either `buf.yaml` or `buf.work.yaml`, and call the corresponding `tonic_buf_build::compile_from_buf_with_config` or `tonic_buf_build::compile_from_buf_workspace_with_config`.
-
-Consider the following build.rs where the buf workspace directory is located one level above the crate (a usual case for multilanguage clients with common protos)
+For advanced tonic configuration (like `file_descriptor_set_path`, `build_server`, etc.), use `compile_from_buf_with_builder_config`:
 
 ```rust
 use std::env;
 use std::path::PathBuf;
 
 fn main() -> Result<(), tonic_buf_build::error::TonicBufBuildError> {
-    let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    path.pop();
-    tonic_buf_build::compile_from_buf_workspace_with_config(
-        tonic_build::configure(),
-        None,
-        tonic_buf_build::TonicBufConfig{buf_dir: Some(path)},
-    )?;
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    
+    tonic_buf_build::compile_from_buf_with_builder_config(|builder| {
+        builder
+            .file_descriptor_set_path(out_dir.join("services_descriptor.bin"))
+            .build_server(false)
+    })?;
     Ok(())
 }
 ```
+
+For complete and working examples, take a look at the examples folder.
