@@ -38,6 +38,12 @@ fn tempdir() -> PathBuf {
     std::env::temp_dir().join(uuid::Uuid::new_v4().to_string())
 }
 
+/// Configuration for tonic-buf-build compilation.
+#[derive(Default)]
+pub struct TonicBufConfig<P: AsRef<Path> = &'static str> {
+    pub buf_dir: Option<P>,
+}
+
 /// Compiles protobuf files using buf workspace configuration.
 ///
 /// This function reads buf.work.yaml from the current directory to determine
@@ -51,12 +57,33 @@ fn tempdir() -> PathBuf {
 /// - Proto file compilation fails
 /// - File system operations fail during compilation
 pub fn compile_from_buf_workspace() -> Result<(), TonicBufBuildError> {
+    compile_from_buf_workspace_with_config(&TonicBufConfig::<&str>::default())
+}
+
+/// Compiles protobuf files using buf workspace configuration with custom config.
+///
+/// Similar to `compile_from_buf_workspace` but allows specifying custom
+/// configuration options such as the buf directory.
+///
+/// # Errors
+///
+/// Returns `TonicBufBuildError` if:
+/// - buf.work.yaml file cannot be read or parsed
+/// - buf binary execution fails
+/// - Proto file compilation fails
+/// - File system operations fail during compilation
+pub fn compile_from_buf_workspace_with_config<P: AsRef<Path>>(
+    tonic_buf_config: &TonicBufConfig<P>,
+) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
         // This is just cleanup, it's not important if it fails
         let _ = std::fs::remove_dir(&export_dir);
     }
-    let buf_dir = Path::new(".");
+    let buf_dir: &Path = match &tonic_buf_config.buf_dir {
+        Some(dir) => dir.as_ref(),
+        None => Path::new("."),
+    };
 
     let buf_work = buf::BufWorkYaml::load(&PathBuf::from(buf_dir).join("buf.work.yaml"))?;
 
@@ -85,20 +112,39 @@ pub fn compile_from_buf_workspace() -> Result<(), TonicBufBuildError> {
 /// - Proto file compilation fails
 /// - File system operations fail during compilation
 pub fn compile_from_buf() -> Result<(), TonicBufBuildError> {
+    compile_from_buf_with_config(&TonicBufConfig::<&str>::default())
+}
+
+/// Compiles protobuf files using buf configuration with custom config.
+///
+/// Similar to `compile_from_buf` but allows specifying custom configuration
+/// options such as the buf directory.
+///
+/// # Errors
+///
+/// Returns `TonicBufBuildError` if:
+/// - buf.yaml file cannot be read or parsed
+/// - buf binary execution fails
+/// - Proto file compilation fails  
+/// - File system operations fail during compilation
+pub fn compile_from_buf_with_config<P: AsRef<Path>>(
+    tonic_buf_config: &TonicBufConfig<P>,
+) -> Result<(), TonicBufBuildError> {
     let export_dir = tempdir();
     defer! {
         // This is just cleanup, it's not important if it fails
         let _ = std::fs::remove_dir(&export_dir);
     }
-    let buf_dir = Path::new(".");
+    let buf_dir: &Path = match &tonic_buf_config.buf_dir {
+        Some(dir) => dir.as_ref(),
+        None => Path::new("."),
+    };
 
     let buf = buf::BufYaml::load(&PathBuf::from(buf_dir).join("buf.yaml"))?;
 
     buf::export_all(&buf, buf_dir, &export_dir)?;
     let protos = buf::ls_files(&export_dir)?;
-    let includes = vec![
-        export_dir.to_string_lossy().to_string(),
-    ];
+    let includes = vec![export_dir.to_string_lossy().to_string()];
 
     tonic_prost_build::configure()
         .compile_protos(&protos, &includes)
@@ -115,7 +161,7 @@ pub fn compile_from_buf() -> Result<(), TonicBufBuildError> {
 /// ```rust,no_run
 /// use std::env;
 /// use std::path::PathBuf;
-/// 
+///
 /// fn main() -> Result<(), tonic_buf_build::error::TonicBufBuildError> {
 ///     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 ///     
@@ -141,24 +187,49 @@ pub fn compile_from_buf_with_builder_config<F>(
 where
     F: FnOnce(tonic_prost_build::Builder) -> tonic_prost_build::Builder,
 {
+    compile_from_buf_with_builder_and_buf_config(
+        configure_builder,
+        &TonicBufConfig::<&str>::default(),
+    )
+}
+
+/// Compiles protobuf files using buf configuration with advanced builder and buf configuration.
+///
+/// This function combines both buf directory configuration and tonic_prost_build configuration.
+///
+/// # Errors
+///
+/// Returns `TonicBufBuildError` if:
+/// - buf.yaml file cannot be read or parsed
+/// - buf binary execution fails
+/// - Proto file compilation fails
+/// - File system operations fail during compilation
+pub fn compile_from_buf_with_builder_and_buf_config<F, P: AsRef<Path>>(
+    configure_builder: F,
+    tonic_buf_config: &TonicBufConfig<P>,
+) -> Result<(), TonicBufBuildError>
+where
+    F: FnOnce(tonic_prost_build::Builder) -> tonic_prost_build::Builder,
+{
     let export_dir = tempdir();
     defer! {
         // This is just cleanup, it's not important if it fails
         let _ = std::fs::remove_dir(&export_dir);
     }
-    let buf_dir = Path::new(".");
+    let buf_dir: &Path = match &tonic_buf_config.buf_dir {
+        Some(dir) => dir.as_ref(),
+        None => Path::new("."),
+    };
 
     let buf = buf::BufYaml::load(&PathBuf::from(buf_dir).join("buf.yaml"))?;
 
     buf::export_all(&buf, buf_dir, &export_dir)?;
     let protos = buf::ls_files(&export_dir)?;
-    let includes = vec![
-        export_dir.to_string_lossy().to_string(),
-    ];
+    let includes = vec![export_dir.to_string_lossy().to_string()];
 
     let builder = tonic_prost_build::configure();
     let configured_builder = configure_builder(builder);
-    
+
     configured_builder
         .compile_protos(&protos, &includes)
         .map_err(|e| TonicBufBuildError::new("error running tonic build", e.into()))

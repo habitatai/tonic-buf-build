@@ -13,7 +13,10 @@ pub(crate) struct BufYaml {
 impl BufYaml {
     pub(crate) fn load(file: &Path) -> Result<BufYaml, TonicBufBuildError> {
         let f = std::fs::File::open(file).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to read {}", file.as_os_str().display()), e.into())
+            TonicBufBuildError::new(
+                &format!("failed to read {}", file.as_os_str().display()),
+                e.into(),
+            )
         })?;
 
         let buf: BufYaml = serde_yaml_ng::from_reader(&f).map_err(|e| {
@@ -34,7 +37,10 @@ pub(crate) struct BufWorkYaml {
 impl BufWorkYaml {
     pub(crate) fn load(file: &Path) -> Result<Self, TonicBufBuildError> {
         let buf_work_file = std::fs::File::open(file).map_err(|e| {
-            TonicBufBuildError::new(&format!("failed to read {}", file.as_os_str().display()), e.into())
+            TonicBufBuildError::new(
+                &format!("failed to read {}", file.as_os_str().display()),
+                e.into(),
+            )
         })?;
 
         let buf_work: BufWorkYaml = serde_yaml_ng::from_reader(&buf_work_file).map_err(|e| {
@@ -71,7 +77,11 @@ pub(crate) fn ls_files(proto_path: &Path) -> Result<Vec<String>, TonicBufBuildEr
     Ok(protos)
 }
 
-pub(crate) fn export_all(buf: &BufYaml, buf_dir: &Path, export_dir: &Path) -> Result<(), TonicBufBuildError> {
+pub(crate) fn export_all(
+    buf: &BufYaml,
+    buf_dir: &Path,
+    export_dir: &Path,
+) -> Result<(), TonicBufBuildError> {
     let export_dir_str = export_dir.to_str().unwrap();
 
     // Export local proto files (current directory)
@@ -81,14 +91,18 @@ pub(crate) fn export_all(buf: &BufYaml, buf_dir: &Path, export_dir: &Path) -> Re
         .spawn()
         .map_err(|e| {
             TonicBufBuildError::new(
-                &format!("failed to execute `buf export . -o {}` from {:?}", export_dir_str, buf_dir),
+                &format!(
+                    "failed to execute `buf export . -o {export_dir_str}` from {buf_dir:?}"
+                ),
                 e.into(),
             )
         })?
         .wait()
         .map_err(|e| {
             TonicBufBuildError::new(
-                &format!("failed to execute `buf export . -o {}` from {:?}", export_dir_str, buf_dir),
+                &format!(
+                    "failed to execute `buf export . -o {export_dir_str}` from {buf_dir:?}"
+                ),
                 e.into(),
             )
         })?;
@@ -102,14 +116,20 @@ pub(crate) fn export_all(buf: &BufYaml, buf_dir: &Path, export_dir: &Path) -> Re
                 .spawn()
                 .map_err(|e| {
                     TonicBufBuildError::new(
-                        &format!("failed to execute `buf export {} -o {}` from {:?}", &dep, export_dir_str, buf_dir),
+                        &format!(
+                            "failed to execute `buf export {} -o {}` from {:?}",
+                            &dep, export_dir_str, buf_dir
+                        ),
                         e.into(),
                     )
                 })?
                 .wait()
                 .map_err(|e| {
                     TonicBufBuildError::new(
-                        &format!("failed to execute `buf export {} -o {}` from {:?}", &dep, export_dir_str, buf_dir),
+                        &format!(
+                            "failed to execute `buf export {} -o {}` from {:?}",
+                            &dep, export_dir_str, buf_dir
+                        ),
                         e.into(),
                     )
                 })?;
@@ -130,7 +150,7 @@ pub(crate) fn export_all_from_workspace(
             let mut buf_dir = PathBuf::from(workspace_dir);
             buf_dir.push(dir);
             buf_dirs.push(buf_dir.clone());
-            
+
             let mut buf_yaml_path = buf_dir.clone();
             buf_yaml_path.push("buf.yaml");
 
